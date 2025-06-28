@@ -1,6 +1,7 @@
 .{
-    .name = "zig-swift-example",
+    .name = .zig_swift_example,
     .version = "0.0.0",
+    .fingerprint = 0xa1a8c5b542c1ff43,
     .minimum_zig_version = "0.14.0",
     .dependencies = .{},
     .paths = .{
