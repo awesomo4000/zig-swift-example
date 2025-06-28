@@ -8,5 +8,5 @@ export fn hello_from_zig() void {
 
 // Export a function that returns a string from Zig
 export fn get_message_from_zig() [*c]const u8 {
-    return "Hello from Zig! This message was generated in Zig code.";
+    return "This Zig function was called from Swift!\nSwift is controlling the application lifecycle.";
 }
