@@ -7,6 +7,9 @@ class GlobalState: ObservableObject {
     @Published var syncBlockingCount: Int = 0
     @Published var asyncTaskCount: Int = 0
     @Published var immediateCount: Int = 0
+    @Published var progressCount: Int = 0
+    @Published var progressValue: Double = 0.0
+    @Published var isProcessing: Bool = false
 }
 
 // App delegate to handle window closing
@@ -140,6 +143,46 @@ struct ContentView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                
+                // Progress example - Long running Zig task with UI updates
+                VStack(spacing: 10) {
+                    HStack {
+                        Button(action: {
+                            // Update count immediately
+                            globalState.progressCount += 1
+                            globalState.isProcessing = true
+                            globalState.progressValue = 0.0
+                            print("[Button 4 - Progress] Starting long-running Zig task...")
+                            
+                            // Call Zig asynchronously for long-running task
+                            DispatchQueue.global(qos: .userInitiated).async {
+                                zig_long_running_task()
+                            }
+                        }) {
+                            Label("Progress Demo", systemImage: "chart.line.uptrend.xyaxis")
+                                .frame(width: 150)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(globalState.isProcessing)
+                        
+                        Text("Count: \(globalState.progressCount)")
+                            .frame(width: 80)
+                            .font(.system(.body, design: .monospaced))
+                        
+                        Text("Long task with progress updates")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if globalState.isProcessing {
+                        ProgressView(value: globalState.progressValue, total: 1.0) {
+                            Text("Processing: \(Int(globalState.progressValue * 100))%")
+                                .font(.caption)
+                        }
+                        .progressViewStyle(.linear)
+                        .frame(maxWidth: 400)
+                    }
+                }
             }
             
             Spacer()
@@ -181,9 +224,30 @@ public func swiftuiIncrementCount() {
     // Not used - each button manages its own count
 }
 
+// Export function that Zig can call to update progress
+@_cdecl("swiftui_update_progress")
+public func swiftuiUpdateProgress(_ progress: Float) {
+    DispatchQueue.main.async {
+        GlobalState.shared.progressValue = Double(progress)
+    }
+}
+
+// Export function that Zig can call when processing is complete
+@_cdecl("swiftui_processing_complete")
+public func swiftuiProcessingComplete() {
+    DispatchQueue.main.async {
+        GlobalState.shared.isProcessing = false
+        GlobalState.shared.progressValue = 1.0
+        GlobalState.shared.message = "Long-running task completed!"
+    }
+}
+
 // Declare the Zig callback functions
 @_silgen_name("zig_callback_from_swiftui")
 func zig_callback_from_swiftui() -> Void
 
 @_silgen_name("zig_callback_with_delay")
 func zig_callback_with_delay() -> Void
+
+@_silgen_name("zig_long_running_task")
+func zig_long_running_task() -> Void

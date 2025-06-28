@@ -5,6 +5,8 @@ extern fn swiftui_init() void;
 extern fn swiftui_run() void;
 extern fn swiftui_update_message(message: [*c]const u8) void;
 extern fn swiftui_increment_count() void;
+extern fn swiftui_update_progress(progress: f32) void;
+extern fn swiftui_processing_complete() void;
 
 // Export callback function that SwiftUI can call
 export fn zig_callback_from_swiftui() void {
@@ -26,6 +28,35 @@ export fn zig_callback_with_delay() void {
     
     // Update message again
     swiftui_update_message("Zig finished processing (with delay)");
+}
+
+// Export long-running task with progress updates
+export fn zig_long_running_task() void {
+    std.debug.print("[Button 4 - Progress] Starting long-running Zig task...\n", .{});
+    
+    // Update message
+    swiftui_update_message("Zig is processing a complex task...");
+    
+    // Simulate a long-running task with progress updates
+    const total_steps: u32 = 100;
+    var i: u32 = 0;
+    while (i <= total_steps) : (i += 1) {
+        // Update progress
+        const progress = @as(f32, @floatFromInt(i)) / @as(f32, @floatFromInt(total_steps));
+        swiftui_update_progress(progress);
+        
+        // Log progress at key milestones
+        if (i % 25 == 0) {
+            std.debug.print("[Progress] Zig task at {}%\n", .{i});
+        }
+        
+        // Simulate work - sleep for 30ms per step (3 seconds total)
+        std.time.sleep(30_000_000); // 30ms
+    }
+    
+    // Mark as complete
+    std.debug.print("[Button 4 - Progress] Zig task completed!\n", .{});
+    swiftui_processing_complete();
 }
 
 pub fn main() !void {
