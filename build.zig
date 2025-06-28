@@ -5,12 +5,13 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Get the example to build from command line option
-    const example = b.option([]const u8, "example", "Which example to build (swift-main, swiftui-main, or zig-main)");
+    const example = b.option([]const u8, "example", "Which example to build (swift-main, swiftui-main, zig-main, or zig-swiftui)");
 
     // Setup all examples
     const swift_main_step = setupSwiftMainExample(b, target, optimize);
     const swiftui_main_step = setupSwiftUIMainExample(b, target, optimize);
     const zig_main_step = setupZigMainExample(b, target, optimize);
+    const zig_swiftui_step = setupZigSwiftUIExample(b, target, optimize);
 
     // If a specific example is requested, make it the default
     if (example) |ex| {
@@ -20,8 +21,10 @@ pub fn build(b: *std.Build) void {
             b.default_step.dependOn(swiftui_main_step);
         } else if (std.mem.eql(u8, ex, "zig-main")) {
             b.default_step.dependOn(zig_main_step);
+        } else if (std.mem.eql(u8, ex, "zig-swiftui")) {
+            b.default_step.dependOn(zig_swiftui_step);
         } else {
-            std.debug.panic("Unknown example: {s}. Use 'swift-main', 'swiftui-main', or 'zig-main'", .{ex});
+            std.debug.panic("Unknown example: {s}. Use 'swift-main', 'swiftui-main', 'zig-main', or 'zig-swiftui'", .{ex});
         }
     } else {
         // Default to swift-main for backward compatibility
@@ -219,6 +222,64 @@ fn setupZigMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize
     run_zig_main_run_step.addArgs(&.{ "open", app_bundle_path });
     run_zig_main_run_step.step.dependOn(&compile_all_step.step);
     run_zig_main_step.dependOn(&run_zig_main_run_step.step);
+
+    return &compile_all_step.step;
+}
+
+fn setupZigSwiftUIExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
+    // Define paths for the .app bundle
+    const app_name = "zig-swiftui.app";
+    const install_prefix = b.install_prefix;
+
+    const app_bundle_path = std.fs.path.join(b.allocator, &.{ install_prefix, app_name }) catch @panic("OOM");
+    const macos_dir_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "MacOS" }) catch @panic("OOM");
+    const resources_dir_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "Resources" }) catch @panic("OOM");
+    const info_plist_dest_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "Info.plist" }) catch @panic("OOM");
+    const executable_dest_path = std.fs.path.join(b.allocator, &.{ macos_dir_path, "zig-swiftui" }) catch @panic("OOM");
+
+    // Create the .app bundle directory structure
+    const create_dirs_run_step = std.Build.Step.Run.create(b, "create zig-swiftui app bundle directories");
+    create_dirs_run_step.addArgs(&.{
+        "mkdir", "-p", macos_dir_path,
+        resources_dir_path,
+    });
+
+    // Copy Info.plist into the .app bundle
+    const copy_plist_run_step = std.Build.Step.Run.create(b, "copy zig-swiftui Info.plist");
+    copy_plist_run_step.addArgs(&.{ "cp" });
+    copy_plist_run_step.addFileArg(b.path("examples/zig-swiftui/macos/Info.plist"));
+    copy_plist_run_step.addArg(info_plist_dest_path);
+    copy_plist_run_step.step.dependOn(&create_dirs_run_step.step);
+
+    // Build the Zig object file
+    const obj = b.addObject(.{
+        .name = "zig-swiftui",
+        .root_source_file = b.path("examples/zig-swiftui/src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    // Compile everything together with swiftc
+    const compile_all_step = std.Build.Step.Run.create(b, "compile Zig and SwiftUI together");
+    compile_all_step.addArgs(&.{ "swiftc", "-parse-as-library" });
+    compile_all_step.addFileArg(b.path("examples/zig-swiftui/macos/ui.swift"));
+    compile_all_step.addFileArg(obj.getEmittedBin());
+    compile_all_step.addArgs(&.{
+        "-o", executable_dest_path,
+    });
+    compile_all_step.step.dependOn(&obj.step);
+    compile_all_step.step.dependOn(&copy_plist_run_step.step);
+
+    // Create build step
+    const zig_swiftui_step = b.step("zig-swiftui", "Build Zig-as-main with SwiftUI example");
+    zig_swiftui_step.dependOn(&compile_all_step.step);
+
+    // Add run step
+    const run_zig_swiftui_step = b.step("run-zig-swiftui", "Run the Zig-as-main SwiftUI application");
+    const run_zig_swiftui_run_step = std.Build.Step.Run.create(b, "open zig-swiftui app bundle");
+    run_zig_swiftui_run_step.addArgs(&.{ "open", app_bundle_path });
+    run_zig_swiftui_run_step.step.dependOn(&compile_all_step.step);
+    run_zig_swiftui_step.dependOn(&run_zig_swiftui_run_step.step);
 
     return &compile_all_step.step;
 }

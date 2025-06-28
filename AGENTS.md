@@ -5,9 +5,11 @@
 - **Build swift-main only**: `zig build -Dexample=swift-main`
 - **Build swiftui-main only**: `zig build -Dexample=swiftui-main`
 - **Build zig-main only**: `zig build -Dexample=zig-main`
+- **Build zig-swiftui only**: `zig build -Dexample=zig-swiftui`
 - **Run swift-main**: `zig build run-swift-main` or `zig build run` (default)
 - **Run swiftui-main**: `zig build run-swiftui-main`
 - **Run zig-main**: `zig build run-zig-main`
+- **Run zig-swiftui**: `zig build run-zig-swiftui`
 - **Clean**: `zig build clean` - Removes all build artifacts
 
 ## Code Style - Zig
@@ -31,7 +33,8 @@
 ## Project Structure
 - `examples/swift-main/`: Swift (AppKit) controls app lifecycle
 - `examples/swiftui-main/`: SwiftUI controls app lifecycle
-- `examples/zig-main/`: Zig controls app lifecycle
+- `examples/zig-main/`: Zig controls app lifecycle (AppKit UI)
+- `examples/zig-swiftui/`: Zig controls app lifecycle (SwiftUI UI)
 - `include/`: C headers for FFI in each example
 - `zig-out/`: Build output directory
 - Each example has its own Info.plist

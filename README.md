@@ -10,7 +10,7 @@ Examples demonstrating interoperability between Zig and Swift on macOS.
 
 ## Examples
 
-This repository contains three examples showing different approaches to Zig-Swift interop:
+This repository contains four examples showing different approaches to Zig-Swift interop:
 
 ### 1. Swift-as-Main Example
 
@@ -62,7 +62,7 @@ zig build -Dexample=swiftui-main
 - `examples/swiftui-main/src/main.zig` - Zig functions exported for SwiftUI
 - `examples/swiftui-main/include/x.h` - C header for SwiftUI-Zig bridge
 
-### 3. Zig-as-Main Example
+### 3. Zig-as-Main Example (AppKit)
 
 In this example, Zig controls the application lifecycle and initializes the Swift UI.
 
@@ -84,6 +84,29 @@ zig build -Dexample=zig-main
 - `examples/zig-main/src/main.zig` - Zig main entry point
 - `examples/zig-main/macos/ui.swift` - Swift UI functions exported for Zig
 - `examples/zig-main/include/swift_ui.h` - C header for Zig-Swift bridge
+
+### 4. Zig-as-Main Example (SwiftUI)
+
+In this example, Zig controls the application lifecycle and launches a SwiftUI app.
+
+**Structure:**
+- Zig contains the main entry point
+- SwiftUI provides the UI with bidirectional communication
+- Demonstrates Zig driving a modern SwiftUI application
+
+**Build and run:**
+```bash
+# Run the example
+zig build run-zig-swiftui
+
+# Build only (without running)
+zig build -Dexample=zig-swiftui
+```
+
+**Key files:**
+- `examples/zig-swiftui/src/main.zig` - Zig main entry point with callbacks
+- `examples/zig-swiftui/macos/ui.swift` - SwiftUI app that can call back to Zig
+- `examples/zig-swiftui/include/swiftui_bridge.h` - C header for bidirectional communication
 
 ## How It Works
 
@@ -113,9 +136,13 @@ zig-swift-example/
 │   │   ├── include/       # C headers
 │   │   ├── macos/        # SwiftUI source and Info.plist
 │   │   └── src/          # Zig source
-│   └── zig-main/          # Zig controls app lifecycle
+│   ├── zig-main/          # Zig controls app lifecycle (AppKit)
+│   │   ├── include/       # C headers
+│   │   ├── macos/        # Swift source and Info.plist
+│   │   └── src/          # Zig source
+│   └── zig-swiftui/       # Zig controls app lifecycle (SwiftUI)
 │       ├── include/       # C headers
-│       ├── macos/        # Swift source and Info.plist
+│       ├── macos/        # SwiftUI source and Info.plist
 │       └── src/          # Zig source
 └── zig-out/               # Build output (generated)
 ```
