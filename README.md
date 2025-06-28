@@ -116,10 +116,21 @@ zig build -Dexample=zig-swiftui
 
 ## How It Works
 
-Both examples use C ABI as the bridge between Zig and Swift:
+All examples use C ABI as the bridge between Zig and Swift:
+
+**Zig → Swift:**
 - Zig functions use `export fn` to be callable from Swift
-- Swift functions use `@_cdecl` to be callable from Zig
-- Header files declare the C interface
+- Swift imports these functions via C headers or `@_silgen_name`
+
+**Swift → Zig:**
+- Swift functions use `@_cdecl("function_name")` to be callable from Zig
+- Zig imports these functions using `extern fn` declarations
+
+**Key patterns demonstrated:**
+- **Swift/SwiftUI as main**: Zig provides a static library that Swift links against
+- **Zig as main**: Zig compiles to object file and links with Swift code using `swiftc`
+- **Bidirectional communication**: Both languages can call each other's functions
+- **Async patterns**: Maintaining UI responsiveness during heavy computation
 
 ## Clean Build
 
