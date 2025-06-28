@@ -14,30 +14,30 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Get the example to build from command line option
-    const example = b.option([]const u8, "example", "Which example to build (swift-main, swiftui-main, zig-main, or zig-swiftui)");
+    const example = b.option([]const u8, "example", "Which example to build (swift-appkit, swiftui-main, zig-appkit, or zig-swiftui)");
 
     // Setup all examples
-    const swift_main_step = setupSwiftMainExample(b, target, optimize);
+    const swift_appkit_step = setupSwiftAppKitExample(b, target, optimize);
     const swiftui_main_step = setupSwiftUIMainExample(b, target, optimize);
-    const zig_main_step = setupZigMainExample(b, target, optimize);
+    const zig_appkit_step = setupZigAppKitExample(b, target, optimize);
     const zig_swiftui_step = setupZigSwiftUIExample(b, target, optimize);
 
     // If a specific example is requested, make it the default
     if (example) |ex| {
-        if (std.mem.eql(u8, ex, "swift-main")) {
-            b.default_step.dependOn(swift_main_step);
+        if (std.mem.eql(u8, ex, "swift-appkit")) {
+            b.default_step.dependOn(swift_appkit_step);
         } else if (std.mem.eql(u8, ex, "swiftui-main")) {
             b.default_step.dependOn(swiftui_main_step);
-        } else if (std.mem.eql(u8, ex, "zig-main")) {
-            b.default_step.dependOn(zig_main_step);
+        } else if (std.mem.eql(u8, ex, "zig-appkit")) {
+            b.default_step.dependOn(zig_appkit_step);
         } else if (std.mem.eql(u8, ex, "zig-swiftui")) {
             b.default_step.dependOn(zig_swiftui_step);
         } else {
-            std.debug.panic("Unknown example: {s}. Use 'swift-main', 'swiftui-main', 'zig-main', or 'zig-swiftui'", .{ex});
+            std.debug.panic("Unknown example: {s}. Use 'swift-appkit', 'swiftui-main', 'zig-appkit', or 'zig-swiftui'", .{ex});
         }
     } else {
-        // Default to swift-main for backward compatibility
-        b.default_step.dependOn(swift_main_step);
+        // Default to swift-appkit for backward compatibility
+        b.default_step.dependOn(swift_appkit_step);
     }
 
     // Add a 'clean' step
@@ -96,44 +96,44 @@ fn createRunStep(b: *std.Build, step_name: []const u8, step_description: []const
     return run_step;
 }
 
-fn setupSwiftMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
+fn setupSwiftAppKitExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
     // Build the Zig static library
     const lib = b.addStaticLibrary(.{
-        .name = "x_swift_main",
-        .root_source_file = b.path("examples/swift-main/src/main.zig"),
+        .name = "x_swift_appkit",
+        .root_source_file = b.path("examples/swift-appkit/src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
-    lib.installHeader(b.path("examples/swift-main/include/x.h"), "x.h");
+    lib.installHeader(b.path("examples/swift-appkit/include/x.h"), "x.h");
     b.installArtifact(lib);
 
     // Create app bundle structure
-    const bundle = createAppBundle(b, "swift-main.app", "swift-main");
-    const bundle_setup = setupAppBundleStructure(b, bundle, "examples/swift-main/macos/Info.plist", "swift-main");
+    const bundle = createAppBundle(b, "swift-appkit.app", "swift-appkit");
+    const bundle_setup = setupAppBundleStructure(b, bundle, "examples/swift-appkit/macos/Info.plist", "swift-appkit");
 
     // Compile Swift code and link with Zig library
-    const swift_compile_run_step = std.Build.Step.Run.create(b, "compile Swift-main and link Zig");
+    const swift_compile_run_step = std.Build.Step.Run.create(b, "compile Swift-AppKit and link Zig");
     swift_compile_run_step.addArgs(&.{ "swiftc" });
-    swift_compile_run_step.addFileArg(b.path("examples/swift-main/macos/main.swift"));
+    swift_compile_run_step.addFileArg(b.path("examples/swift-appkit/macos/main.swift"));
     swift_compile_run_step.addArgs(&.{
         "-import-objc-header", std.fs.path.join(b.allocator, &.{ b.install_prefix, "include", "x.h" }) catch @panic("OOM"),
         "-L",                  std.fs.path.join(b.allocator, &.{ b.install_prefix, "lib" }) catch @panic("OOM"),
-        "-lx_swift_main",
+        "-lx_swift_appkit",
         "-o", bundle.executable_dest,
     });
     swift_compile_run_step.step.dependOn(&lib.step);
     swift_compile_run_step.step.dependOn(bundle_setup);
 
     // Create build step
-    const swift_main_step = b.step("swift-main", "Build Swift-as-main example");
-    swift_main_step.dependOn(&swift_compile_run_step.step);
+    const swift_appkit_step = b.step("swift-appkit", "Build Swift-AppKit example");
+    swift_appkit_step.dependOn(&swift_compile_run_step.step);
 
     // Add run step
-    const run_swift_main_step = createRunStep(b, "run-swift-main", "Run the Swift-as-main macOS application", bundle.app_path, &swift_compile_run_step.step);
+    const run_swift_appkit_step = createRunStep(b, "run-swift-appkit", "Run the Swift-AppKit macOS application", bundle.app_path, &swift_compile_run_step.step);
 
     // Add run alias for consistency
-    const run_step = b.step("run", "Run the default (Swift-as-main) macOS application");
-    run_step.dependOn(run_swift_main_step);
+    const run_step = b.step("run", "Run the default (Swift-AppKit) macOS application");
+    run_step.dependOn(run_swift_appkit_step);
 
     return &swift_compile_run_step.step;
 }
@@ -176,23 +176,23 @@ fn setupSwiftUIMainExample(b: *std.Build, target: std.Build.ResolvedTarget, opti
     return &swift_compile_run_step.step;
 }
 
-fn setupZigMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
+fn setupZigAppKitExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
     // Create app bundle structure
-    const bundle = createAppBundle(b, "zig-main.app", "zig-main");
-    const bundle_setup = setupAppBundleStructure(b, bundle, "examples/zig-main/macos/Info.plist", "zig-main");
+    const bundle = createAppBundle(b, "zig-appkit.app", "zig-appkit");
+    const bundle_setup = setupAppBundleStructure(b, bundle, "examples/zig-appkit/macos/Info.plist", "zig-appkit");
 
     // Build the Zig object file
     const obj = b.addObject(.{
-        .name = "zig-main",
-        .root_source_file = b.path("examples/zig-main/src/main.zig"),
+        .name = "zig-appkit",
+        .root_source_file = b.path("examples/zig-appkit/src/main.zig"),
         .target = target,
         .optimize = optimize,
     });
 
     // Compile everything together with swiftc
-    const compile_all_step = std.Build.Step.Run.create(b, "compile Zig and Swift together");
+    const compile_all_step = std.Build.Step.Run.create(b, "compile Zig and Swift AppKit together");
     compile_all_step.addArgs(&.{ "swiftc", "-parse-as-library" });
-    compile_all_step.addFileArg(b.path("examples/zig-main/macos/ui.swift"));
+    compile_all_step.addFileArg(b.path("examples/zig-appkit/macos/ui.swift"));
     compile_all_step.addFileArg(obj.getEmittedBin());
     compile_all_step.addArgs(&.{
         "-o", bundle.executable_dest,
@@ -201,11 +201,11 @@ fn setupZigMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize
     compile_all_step.step.dependOn(bundle_setup);
 
     // Create build step
-    const zig_main_step = b.step("zig-main", "Build Zig-as-main example");
-    zig_main_step.dependOn(&compile_all_step.step);
+    const zig_appkit_step = b.step("zig-appkit", "Build Zig-AppKit example");
+    zig_appkit_step.dependOn(&compile_all_step.step);
 
     // Add run step
-    _ = createRunStep(b, "run-zig-main", "Run the Zig-as-main macOS application", bundle.app_path, &compile_all_step.step);
+    _ = createRunStep(b, "run-zig-appkit", "Run the Zig-AppKit macOS application", bundle.app_path, &compile_all_step.step);
 
     return &compile_all_step.step;
 }

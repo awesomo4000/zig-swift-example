@@ -2,16 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-\t<key>CFBundleExecutable</key>
-\t<string>swift-main</string>
+	<key>CFBundleExecutable</key>
+	<string>swift-appkit</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
-\t<key>CFBundleIdentifier</key>
-\t<string>com.example.swift-main</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.example.swift-appkit</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-\t<key>CFBundleName</key>
-\t<string>Swift Main Example</string>
+	<key>CFBundleName</key>
+	<string>Swift AppKit Example</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

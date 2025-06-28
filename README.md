@@ -12,9 +12,9 @@ Examples demonstrating interoperability between Zig and Swift on macOS.
 
 This repository contains four examples showing different approaches to Zig-Swift interop:
 
-### 1. Swift-as-Main Example
+### 1. Swift AppKit Example
 
-In this example, Swift controls the application lifecycle and calls functions implemented in Zig.
+In this example, Swift (using AppKit) controls the application lifecycle and calls functions implemented in Zig.
 
 **Structure:**
 - Swift creates the macOS app and UI
@@ -24,10 +24,10 @@ In this example, Swift controls the application lifecycle and calls functions im
 **Build and run:**
 ```bash
 # Run the example
-zig build run-swift-main
+zig build run-swift-appkit
 
 # Build only (without running)
-zig build -Dexample=swift-main
+zig build -Dexample=swift-appkit
 
 # Default build/run (backward compatible)
 zig build
@@ -35,9 +35,9 @@ zig build run
 ```
 
 **Key files:**
-- `examples/swift-main/macos/main.swift` - Swift app entry point
-- `examples/swift-main/src/main.zig` - Zig functions exported for Swift
-- `examples/swift-main/include/x.h` - C header for Swift-Zig bridge
+- `examples/swift-appkit/macos/main.swift` - Swift AppKit app entry point
+- `examples/swift-appkit/src/main.zig` - Zig functions exported for Swift
+- `examples/swift-appkit/include/x.h` - C header for Swift-Zig bridge
 
 ### 2. SwiftUI-as-Main Example
 
@@ -62,9 +62,9 @@ zig build -Dexample=swiftui-main
 - `examples/swiftui-main/src/main.zig` - Zig functions exported for SwiftUI
 - `examples/swiftui-main/include/x.h` - C header for SwiftUI-Zig bridge
 
-### 3. Zig-as-Main Example (AppKit)
+### 3. Zig AppKit Example
 
-In this example, Zig controls the application lifecycle and initializes the Swift UI.
+In this example, Zig controls the application lifecycle and initializes a Swift AppKit UI.
 
 **Structure:**
 - Zig contains the main entry point
@@ -74,18 +74,18 @@ In this example, Zig controls the application lifecycle and initializes the Swif
 **Build and run:**
 ```bash
 # Run the example
-zig build run-zig-main
+zig build run-zig-appkit
 
 # Build only (without running)
-zig build -Dexample=zig-main
+zig build -Dexample=zig-appkit
 ```
 
 **Key files:**
-- `examples/zig-main/src/main.zig` - Zig main entry point
-- `examples/zig-main/macos/ui.swift` - Swift UI functions exported for Zig
-- `examples/zig-main/include/swift_ui.h` - C header for Zig-Swift bridge
+- `examples/zig-appkit/src/main.zig` - Zig main entry point
+- `examples/zig-appkit/macos/ui.swift` - Swift AppKit UI functions exported for Zig
+- `examples/zig-appkit/include/swift_ui.h` - C header for Zig-Swift bridge
 
-### 4. Zig-as-Main Example (SwiftUI)
+### 4. Zig SwiftUI Example
 
 In this example, Zig controls the application lifecycle and launches a SwiftUI app with advanced interop demonstrations.
 
@@ -127,10 +127,11 @@ All examples use C ABI as the bridge between Zig and Swift:
 - Zig imports these functions using `extern fn` declarations
 
 **Key patterns demonstrated:**
-- **Swift/SwiftUI as main**: Zig provides a static library that Swift links against
+- **Swift AppKit/SwiftUI as main**: Zig provides a static library that Swift links against
 - **Zig as main**: Zig compiles to object file and links with Swift code using `swiftc`
 - **Bidirectional communication**: Both languages can call each other's functions
 - **Async patterns**: Maintaining UI responsiveness during heavy computation
+- **UI frameworks**: Examples using both AppKit (traditional) and SwiftUI (modern)
 
 ## Clean Build
 
@@ -145,19 +146,19 @@ zig build clean
 zig-swift-example/
 ├── build.zig                 # Build configuration
 ├── examples/
-│   ├── swift-main/         # Swift controls app lifecycle
-│   │   ├── include/        # C headers
-│   │   ├── macos/         # Swift source and Info.plist
-│   │   └── src/           # Zig source
+│   ├── swift-appkit/      # Swift AppKit controls app lifecycle
+│   │   ├── include/       # C headers
+│   │   ├── macos/        # Swift source and Info.plist
+│   │   └── src/          # Zig source
 │   ├── swiftui-main/      # SwiftUI controls app lifecycle
 │   │   ├── include/       # C headers
 │   │   ├── macos/        # SwiftUI source and Info.plist
 │   │   └── src/          # Zig source
-│   ├── zig-main/          # Zig controls app lifecycle (AppKit)
+│   ├── zig-appkit/        # Zig controls AppKit app lifecycle
 │   │   ├── include/       # C headers
 │   │   ├── macos/        # Swift source and Info.plist
 │   │   └── src/          # Zig source
-│   └── zig-swiftui/       # Zig controls app lifecycle (SwiftUI)
+│   └── zig-swiftui/       # Zig controls SwiftUI app lifecycle
 │       ├── include/       # C headers
 │       ├── macos/        # SwiftUI source and Info.plist
 │       └── src/          # Zig source
