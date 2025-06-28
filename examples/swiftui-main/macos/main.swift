@@ -1,8 +1,16 @@
 import SwiftUI
 
+// App delegate to handle window closing
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
+
 // Main SwiftUI App structure
 @main
 struct ZigSwiftUIApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var viewModel = ContentViewModel()
     
     var body: some Scene {
@@ -12,6 +20,14 @@ struct ZigSwiftUIApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .keyboardShortcut("q", modifiers: .command)
+            }
+        }
     }
 }
 

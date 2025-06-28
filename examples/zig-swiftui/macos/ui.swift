@@ -9,8 +9,16 @@ class GlobalState: ObservableObject {
     @Published var immediateCount: Int = 0
 }
 
+// App delegate to handle window closing
+class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        return true
+    }
+}
+
 // SwiftUI App structure
 struct ZigControlledApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var globalState = GlobalState.shared
     
     var body: some Scene {
@@ -21,6 +29,14 @@ struct ZigControlledApp: App {
         }
         .windowStyle(.titleBar)
         .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(replacing: .appTermination) {
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .keyboardShortcut("q", modifiers: .command)
+            }
+        }
     }
 }
 
