@@ -5,20 +5,23 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     // Get the example to build from command line option
-    const example = b.option([]const u8, "example", "Which example to build (swift-main or zig-main)");
+    const example = b.option([]const u8, "example", "Which example to build (swift-main, swiftui-main, or zig-main)");
 
-    // Setup both examples
+    // Setup all examples
     const swift_main_step = setupSwiftMainExample(b, target, optimize);
+    const swiftui_main_step = setupSwiftUIMainExample(b, target, optimize);
     const zig_main_step = setupZigMainExample(b, target, optimize);
 
     // If a specific example is requested, make it the default
     if (example) |ex| {
         if (std.mem.eql(u8, ex, "swift-main")) {
             b.default_step.dependOn(swift_main_step);
+        } else if (std.mem.eql(u8, ex, "swiftui-main")) {
+            b.default_step.dependOn(swiftui_main_step);
         } else if (std.mem.eql(u8, ex, "zig-main")) {
             b.default_step.dependOn(zig_main_step);
         } else {
-            std.debug.panic("Unknown example: {s}. Use 'swift-main' or 'zig-main'", .{ex});
+            std.debug.panic("Unknown example: {s}. Use 'swift-main', 'swiftui-main', or 'zig-main'", .{ex});
         }
     } else {
         // Default to swift-main for backward compatibility
@@ -96,6 +99,68 @@ fn setupSwiftMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimi
     // Add run alias for consistency
     const run_step = b.step("run", "Run the default (Swift-as-main) macOS application");
     run_step.dependOn(run_swift_main_step);
+
+    return &swift_compile_run_step.step;
+}
+
+fn setupSwiftUIMainExample(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Step {
+    // Build the Zig static library
+    const lib = b.addStaticLibrary(.{
+        .name = "x_swiftui_main",
+        .root_source_file = b.path("examples/swiftui-main/src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    lib.installHeader(b.path("examples/swiftui-main/include/x.h"), "x.h");
+    b.installArtifact(lib);
+
+    // Define paths for the .app bundle
+    const app_name = "swiftui-main.app";
+    const install_prefix = b.install_prefix;
+
+    const app_bundle_path = std.fs.path.join(b.allocator, &.{ install_prefix, app_name }) catch @panic("OOM");
+    const macos_dir_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "MacOS" }) catch @panic("OOM");
+    const resources_dir_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "Resources" }) catch @panic("OOM");
+    const info_plist_dest_path = std.fs.path.join(b.allocator, &.{ app_bundle_path, "Contents", "Info.plist" }) catch @panic("OOM");
+    const executable_dest_path = std.fs.path.join(b.allocator, &.{ macos_dir_path, "swiftui-main" }) catch @panic("OOM");
+
+    // Create the .app bundle directory structure
+    const create_dirs_run_step = std.Build.Step.Run.create(b, "create swiftui-main app bundle directories");
+    create_dirs_run_step.addArgs(&.{
+        "mkdir", "-p", macos_dir_path,
+        resources_dir_path,
+    });
+
+    // Copy Info.plist into the .app bundle
+    const copy_plist_run_step = std.Build.Step.Run.create(b, "copy swiftui-main Info.plist");
+    copy_plist_run_step.addArgs(&.{ "cp" });
+    copy_plist_run_step.addFileArg(b.path("examples/swiftui-main/macos/Info.plist"));
+    copy_plist_run_step.addArg(info_plist_dest_path);
+    copy_plist_run_step.step.dependOn(&create_dirs_run_step.step);
+
+    // Compile Swift code and link with Zig library
+    const swift_compile_run_step = std.Build.Step.Run.create(b, "compile SwiftUI-main and link Zig");
+    swift_compile_run_step.addArgs(&.{ "swiftc", "-parse-as-library" });
+    swift_compile_run_step.addFileArg(b.path("examples/swiftui-main/macos/main.swift"));
+    swift_compile_run_step.addArgs(&.{
+        "-import-objc-header", std.fs.path.join(b.allocator, &.{ install_prefix, "include", "x.h" }) catch @panic("OOM"),
+        "-L",                  std.fs.path.join(b.allocator, &.{ install_prefix, "lib" }) catch @panic("OOM"),
+        "-lx_swiftui_main",
+        "-o", executable_dest_path,
+    });
+    swift_compile_run_step.step.dependOn(&lib.step);
+    swift_compile_run_step.step.dependOn(&copy_plist_run_step.step);
+
+    // Create build step
+    const swiftui_main_step = b.step("swiftui-main", "Build SwiftUI-as-main example");
+    swiftui_main_step.dependOn(&swift_compile_run_step.step);
+
+    // Add run step
+    const run_swiftui_main_step = b.step("run-swiftui-main", "Run the SwiftUI-as-main macOS application");
+    const run_swiftui_main_run_step = std.Build.Step.Run.create(b, "open swiftui-main app bundle");
+    run_swiftui_main_run_step.addArgs(&.{ "open", app_bundle_path });
+    run_swiftui_main_run_step.step.dependOn(&swift_compile_run_step.step);
+    run_swiftui_main_step.dependOn(&run_swiftui_main_run_step.step);
 
     return &swift_compile_run_step.step;
 }
