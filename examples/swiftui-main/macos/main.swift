@@ -2,6 +2,11 @@ import SwiftUI
 
 // App delegate to handle window closing
 class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Activate the app and bring window to front
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+    
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         return true
     }

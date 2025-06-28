@@ -40,11 +40,14 @@ private var appDelegate: AppDelegate?
         appMenuItem.submenu = appMenu
         
         // Add a Quit menu item
-        let quitMenuItem = NSMenuItem(title: "Quit", 
+        let quitMenuItem = NSMenuItem(title: \"Quit\", 
                            action: #selector(NSApplication.terminate(_:)), 
-                           keyEquivalent: "q")
+                           keyEquivalent: \"q\")
         quitMenuItem.keyEquivalentModifierMask = .command
         appMenu.addItem(quitMenuItem)
+        
+        // Activate the app and bring window to front
+        NSApp.activate(ignoringOtherApps: true)
     }
     
     func applicationWillTerminate(_ aNotification: Notification) {

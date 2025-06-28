@@ -50,6 +50,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // in our Zig library. The Swift compiler knows about this function
         // because we will tell it to look at our `x.h` header file.
         hello_from_zig()
+        
+        // Activate the app and bring window to front
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     func applicationWillTerminate(_ aNotification: Notification) {
