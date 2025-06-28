@@ -87,12 +87,18 @@ zig build -Dexample=zig-main
 
 ### 4. Zig-as-Main Example (SwiftUI)
 
-In this example, Zig controls the application lifecycle and launches a SwiftUI app.
+In this example, Zig controls the application lifecycle and launches a SwiftUI app with advanced interop demonstrations.
 
 **Structure:**
 - Zig contains the main entry point
 - SwiftUI provides the UI with bidirectional communication
 - Demonstrates Zig driving a modern SwiftUI application
+- Shows different callback patterns and UI responsiveness
+
+**Features:**
+- **Multiple callback patterns**: Demonstrates sync blocking, async task, and immediate UI update patterns
+- **Progress tracking**: Shows how Zig can perform long-running tasks while updating SwiftUI progress bars
+- **Responsive UI**: Maintains full UI responsiveness during heavy Zig computation
 
 **Build and run:**
 ```bash
@@ -104,8 +110,8 @@ zig build -Dexample=zig-swiftui
 ```
 
 **Key files:**
-- `examples/zig-swiftui/src/main.zig` - Zig main entry point with callbacks
-- `examples/zig-swiftui/macos/ui.swift` - SwiftUI app that can call back to Zig
+- `examples/zig-swiftui/src/main.zig` - Zig main entry point with callbacks and progress demo
+- `examples/zig-swiftui/macos/ui.swift` - SwiftUI app demonstrating various interop patterns
 - `examples/zig-swiftui/include/swiftui_bridge.h` - C header for bidirectional communication
 
 ## How It Works
