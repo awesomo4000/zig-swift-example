@@ -40,9 +40,9 @@ private var appDelegate: AppDelegate?
         appMenuItem.submenu = appMenu
         
         // Add a Quit menu item
-        let quitMenuItem = NSMenuItem(title: \"Quit\", 
+        let quitMenuItem = NSMenuItem(title: "Quit", 
                            action: #selector(NSApplication.terminate(_:)), 
-                           keyEquivalent: \"q\")
+                           keyEquivalent: "q")
         quitMenuItem.keyEquivalentModifierMask = .command
         appMenu.addItem(quitMenuItem)
         
