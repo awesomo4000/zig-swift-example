@@ -15,6 +15,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.center()
         window.title = "Zig + Swift"
         window.makeKeyAndOrderFront(nil)
+        
+        // Get message from Zig
+        let zigMessage = String(cString: get_message_from_zig())
+        
+        // Create a text view to display the message
+        let textView = NSTextView(frame: window.contentView!.bounds)
+        textView.string = zigMessage
+        textView.isEditable = false
+        textView.font = NSFont.systemFont(ofSize: 16)
+        textView.alignment = .center
+        textView.autoresizingMask = [.width, .height]
+        
+        window.contentView?.addSubview(textView)
 
         // Create the main menu bar
         let mainMenu = NSMenu()
